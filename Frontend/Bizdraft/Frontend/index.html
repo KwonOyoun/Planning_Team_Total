@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BizDraft AI - Smart Proposal Wizard</title>
+    <!-- Flask static_folder="Frontend" 기준 절대 경로 -->
+    <link rel="stylesheet" href="/Bizdraft/Frontend/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            200: '#bae6fd',
+                            300: '#7dd3fc',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+
+<body class="bg-gray-50 min-h-screen">
+    <custom-navbar></custom-navbar>
+    <button id="promptToggleBtn"
+        class="fixed bottom-6 right-6 z-50 bg-primary-600 text-white p-3 rounded-full shadow-lg">
+
+        <i data-feather="sliders"></i>
+    </button>
+    <custom-prompt-sidebar class="collapsed""></custom-prompt-sidebar>
+
+    <main class="container mx-auto px-4 py-12">
+        <div class="max-w-3xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-bold text-primary-600 mb-4">BizDraft AI</h1>
+                <p class="text-lg text-gray-600">키워드 기반으로 AI를 활용하여 사업제안서를 자동으로 작성하세요.</p>
+            </div>
+
+            <div class="space-y-8">
+                <div class="bg-primary-50 p-6 rounded-lg">
+                    <h2 class="text-2xl font-semibold text-primary-700 mb-4">사업제안서 작성을 시작하기</h2>
+                    <p class="text-gray-600 mb-6">키워드를 입력해 제안서 제목을 생성하세요(최대 5개).</br>
+                        -> 첫 칸에는 가장 핵심 키워드를 입력해주세요.</p>
+                    <form id="keywordsForm" class="space-y-4">
+                        <div id="keywordInputs" class="space-y-3">
+                            <div class="flex items-center space-x-2">
+                                <input type="text" name="keywords" placeholder="키워드 입력 (예: '인공지능')" class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500">
+                                <button type="button" onclick="addKeywordField()" class="p-2 rounded-full bg-primary-100 text-primary-600 hover:bg-primary-200">
+                                    <i data-feather="plus"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center">
+                            <i data-feather="zap" class="mr-2"></i> 제안서 제목 생성
+                        </button>
+                    </form>
+                </div>
+
+                <div id="titlesSection" class="hidden bg-white border border-gray-200 rounded-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">추천 제안서 제목 (클릭하여 전체 제안서 생성)</h2>
+                    <div id="titlesList" class="space-y-3"></div>
+                </div>
+
+                <div id="proposalSection" class="hidden bg-white border border-gray-200 rounded-lg p-6">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-4">제안서 초안</h2>
+                    <div id="proposalContent" class="prose max-w-none"></div>
+
+                        <!-- 버튼 3개를 flex로 수평 정렬 -->
+                    <div class="mt-6 flex space-x-4">
+                        <!-- HWPX 다운로드 버튼 -->
+                        <button id="hwpxdownloadBtn"
+                            class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                            <i data-feather="download" class="mr-2"></i> HWPX 파일 다운로드
+                        </button>
+
+                        <!-- PPTX 다운로드 버튼 -->
+                        <button id="pptxDownloadBtn"
+                            class="bg-primary-600 hover:bg-primary-700 text-white font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                            <i data-feather="file" class="mr-2"></i> PPTX 파일 다운로드
+                        </button>
+
+                        <!-- 재작성 버튼 -->
+                        <button id="rewriteBtn"
+                            class="bg-primary-50 hover:bg-primary-100 text-primary-700 border border-primary-300 font-medium py-3 px-6 rounded-lg transition duration-200 flex items-center">
+                            <i data-feather="refresh-ccw" class="mr-2"></i> 재작성
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <custom-footer></custom-footer>
+    <!-- 정적 파일 절대 경로 (Frontend/Bizdraft/Frontend 하위) -->
+    <script src="/Bizdraft/Frontend/component/prompt-sidebar.js"></script>
+    <script src="/Bizdraft/Frontend/component/navbar.js"></script>
+    <script src="/Bizdraft/Frontend/component/footer.js"></script>
+    <script src="/Bizdraft/Frontend/script.js"></script>
+    <script>
+        feather.replace();
+    </script>
+</body>
+
+</html>

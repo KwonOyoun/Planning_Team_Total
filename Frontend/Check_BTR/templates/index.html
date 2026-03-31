@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trip Report Checker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 텍스트가 길어도 칸 안에서 줄바꿈되도록 설정 */
+        .break-keep {
+            word-break: keep-all;
+            word-wrap: break-word;
+        }
+
+        /* 행에 마우스 올렸을 때 효과 */
+        tr:hover td {
+            background-color: #f8fafc;
+            transition: background-color 0.2s;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="w-full min-h-screen px-6 py-6">
+
+        <header class="flex justify-between items-center mb-6">
+            <div class="flex items-center gap-3">
+                <h1 class="text-3xl font-bold text-gray-900 tracking-tight">Trip Report Checker</h1>
+                <span class="px-3 py-1 bg-indigo-100 text-indigo-700 text-xs font-bold rounded-full">DASHBOARD</span>
+            </div>
+            <button onclick="fetchTrips()"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg shadow-md font-medium transition active:scale-95">
+                Refresh Data
+            </button>
+        </header>
+
+        <div class="bg-white rounded-xl shadow-md border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto">
+
+                <table class="w-full table-fixed min-w-[1400px]">
+                    <thead
+                        class="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase text-xs font-bold tracking-wider">
+                        <tr>
+                            <th class="w-[120px] px-4 py-4 text-center">Date</th>
+
+                            <th class="px-6 py-4 text-left">Trip Application (Plan)</th>
+
+                            <th class="w-[100px] px-4 py-4 text-center">Status</th>
+
+                            <th class="w-[120px] px-4 py-4 text-center">Report Status</th>
+
+                            <th class="px-6 py-4 text-left">Report Title (Result)</th>
+
+                            <th class="w-[100px] px-4 py-4 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tripTableBody" class="divide-y divide-gray-100">
+                        <tr>
+                            <td colspan="6" class="px-6 py-24 text-center text-gray-400 italic text-lg">
+                                Click "Refresh Data" to load...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchTrips() {
+            const tbody = document.getElementById('tripTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-24 text-center text-blue-600 font-medium animate-pulse text-lg">Loading data...</td></tr>';
+
+            try {
+                const response = await fetch('api/trips');
+                const trips = await response.json();
+
+                if (response.status === 401) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-24 text-center text-gray-500 text-lg">⚠️ 로그인이 필요합니다.<br>새 창에서 그룹웨어 로그인 후 Refresh Data를 눌러주세요.</td></tr>';
+                    alert("로그인이 필요합니다.\n새 창에서 그룹웨어 로그인을 완료한 뒤, 다시 [Refresh Data]를 눌러주세요.");
+                    return;
+                }
+
+                if (response.status !== 200) {
+                    tbody.innerHTML = `<tr><td colspan="6" class="py-24 text-center text-red-500 font-bold text-lg">Error: ${trips.error || 'Unknown'}</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                if (trips.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-24 text-center text-gray-500 text-lg">No trips found.</td></tr>';
+                    return;
+                }
+
+                trips.forEach(trip => {
+                    const appLink = `<a href="#" onclick="openDoc('${trip.app_id}')" class="text-gray-900 font-semibold hover:text-blue-600 hover:underline block break-keep leading-relaxed" title="${trip.name}">${trip.name}</a>`;
+
+                    const reportLink = trip.report_status === 'Submitted'
+                        ? `<a href="#" onclick="openDoc('${trip.report_id}')" class="text-gray-700 hover:text-blue-600 hover:underline block break-keep leading-relaxed" title="${trip.report_title}">${trip.report_title}</a>`
+                        : '<span class="text-gray-300 text-sm">-</span>';
+
+                    let badgeClass = "bg-gray-100 text-gray-600";
+                    if (trip.report_status === 'Missing') badgeClass = "bg-red-50 text-red-600 border border-red-200";
+                    else if (trip.report_status === 'Submitted') badgeClass = "bg-green-50 text-green-600 border border-green-200";
+
+                    let actionBtn = '<span class="text-gray-300 text-xs">Done</span>';
+                    if (trip.report_status === 'Missing') {
+                        actionBtn = `<button onclick="draftReport('${trip.app_id}')" class="text-white bg-indigo-500 hover:bg-indigo-600 px-3 py-1.5 rounded text-xs font-bold shadow transition transform active:scale-95">Draft</button>`;
+                    } else if (trip.report_status === 'Submitted') {
+                        actionBtn = `<button onclick="checkReport('${trip.report_id}')" class="text-white bg-green-500 hover:bg-green-600 px-3 py-1.5 rounded text-xs font-bold shadow transition transform active:scale-95">Check</button>`;
+                    }
+
+                    const row = `
+                        <tr class="group">
+                            <td class="px-4 py-5 text-sm text-gray-500 text-center whitespace-nowrap align-middle font-mono">${trip.date}</td>
+                            <td class="px-6 py-5 text-sm align-middle border-l-4 border-transparent group-hover:border-blue-400 pl-4">${appLink}</td>
+                            <td class="px-4 py-5 text-center whitespace-nowrap align-middle">
+                                <span class="px-2.5 py-1 text-[11px] font-semibold text-gray-500 bg-gray-100 rounded border border-gray-200">${trip.status}</span>
+                            </td>
+                            <td class="px-4 py-5 text-center whitespace-nowrap align-middle">
+                                <span class="px-3 py-1 inline-flex text-[11px] leading-4 font-bold rounded-full ${badgeClass}">
+                                    ${trip.report_status}
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-sm align-middle text-gray-600">${reportLink}</td>
+                            <td class="px-4 py-5 text-center align-middle">${actionBtn}</td>
+                        </tr>
+                    `;
+                    tbody.innerHTML += row;
+                });
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-24 text-center text-red-500 text-lg">Network Error: ${e}</td></tr>`;
+            }
+        }
+
+        async function openDoc(id) {
+            if (!id) return;
+            try { await fetch('api/open', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) }); }
+            catch (e) { alert("Network Error: " + e); }
+        }
+
+        async function draftReport(id) {
+            if (!confirm("결과보고서를 자동 작성하시겠습니까?")) return;
+            alert("봇이 작업을 시작합니다. 잠시만 기다려주세요...");
+            try {
+                const res = await fetch('api/draft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
+                const data = await res.json();
+                if (res.status === 200) alert(data.message);
+                else alert("오류: " + data.error);
+            } catch (e) { alert("오류: " + e); }
+        }
+
+        async function checkReport(id) {
+            alert("데이터 분석 중...");
+            try {
+                const res = await fetch('api/check_report', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: id }) });
+                const data = await res.json();
+                if (res.status !== 200) { alert("Error: " + (data.error || "Unknown")); return; }
+                let msg = `[분석 결과]\n제목: ${data.data.title}\n총 지출액: ${data.data.total_expense.toLocaleString()}원\n첨부파일: ${data.data.attachment_count}개\n`;
+                msg += (data.issues.length > 0) ? `\n⚠️ 문제점:\n${data.issues.join('\n')}` : `\n✅ 완료`;
+                alert(msg);
+            } catch (e) { alert(e); }
+        }
+    </script>
+</body>
+
+</html>

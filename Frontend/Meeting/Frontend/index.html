@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🪄MeetNote Magic Wand</title>
+    <!-- Flask static_folder="Frontend" 기준 절대 경로 -->
+    <link rel="stylesheet" href="/Meeting/Frontend/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="bg-gray-50 min-h-screen"> 
+    <custom-navbar></custom-navbar>
+    
+    <main class="container mx-auto px-4 py-8">
+        <div id="login-section" class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+            <div class="text-center mb-6">
+                <i data-feather="edit-3" class="w-12 h-12 text-indigo-500 mx-auto"></i>
+                <h1 class="text-3xl font-bold text-gray-800 mt-4">MeetNote Magic Wand</h1>
+<p class="text-gray-600 mt-2">회의록 자동 작성 시스템에 로그인하세요</p>
+            </div>
+            
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">아이디</label>
+                    <input type="text" id="username" name="username" required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">비밀번호</label>
+                    <input type="password" id="password" name="password" required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div>
+                    <button type="submit" 
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        로그인
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div id="meeting-list-section" class="hidden mt-8 max-w-2xl mx-auto">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">회의 목록</h2>
+            <div id="meeting-cards" class="space-y-4">
+                <!-- Meeting cards will be populated here -->
+            </div>
+        </div>
+<div id="meeting-detail-section" class="hidden mt-8 max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">회의 정보</h2>
+                <button id="back-to-list" class="text-indigo-600 hover:text-indigo-800 flex items-center">
+                    <i data-feather="arrow-left" class="w-4 h-4 mr-1"></i> 목록으로
+                </button>
+            </div>
+            
+            <form id="meeting-form" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label for="project-name" class="block text-sm font-medium text-gray-700">사업명</label>
+                        <input type="text" id="project-name" name="project-name" required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <div>
+                        <label for="meeting-name" class="block text-sm font-medium text-gray-700">회의명</label>
+                        <input type="text" id="meeting-name" name="meeting-name" required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    
+                    <!-- 회의 일시(한 시점) -->
+                    <!-- <div>
+                        <label for="meeting-date" class="block text-sm font-medium text-gray-700">회의일시</label>
+                        <input type="datetime-local" id="meeting-date" name="meeting-date" required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div> -->
+                    
+                    <div>
+                        <label for="meeting-start" class="block text-sm font-medium text-gray-700">
+                            회의 시작
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="meeting-start"
+                            name="meeting-start"
+                            required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
+                                focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="meeting-end" class="block text-sm font-medium text-gray-700">
+                            회의 종료
+                        </label>
+                        <input
+                            type="datetime-local"
+                            id="meeting-end"
+                            name="meeting-end"
+                            required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
+                                focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+
+                    <div>
+                        <label for="meeting-location" class="block text-sm font-medium text-gray-700">회의장소</label>
+                        <input type="text" id="meeting-location" name="meeting-location" required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <label class="block text-sm font-medium text-gray-700">참석자 목록</label>
+                        <button type="button" id="add-participant" class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                            <i data-feather="plus" class="w-4 h-4 mr-1"></i> 참석자 추가
+                        </button>
+                    </div>
+                    
+                    <div id="participants-container" class="space-y-4">
+                        <!-- Participant fields will be added here -->
+                    </div>
+                </div>
+
+                <div>
+                    <label for="meeting-summary" class="block text-sm font-medium text-gray-700">
+                        회의 내용 요약
+                    </label>
+                    <textarea
+                        id="meeting-summary"
+                        rows="6"
+                        placeholder="회의 주요 논의 내용, 결정 사항 등을 입력하세요"
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm
+                            focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    ></textarea>
+                </div>
+                <div class="flex justify-end">
+                    <button
+                        type="button"
+                        id="write-minutes-btn"
+                        class="px-4 py-2 border border-transparent rounded-md shadow-sm
+                            text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700
+                            focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        회의록 작성
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div id="preview-section" class="hidden mt-8 max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-800">회의록 미리보기</h2>
+                <button id="back-to-edit" class="text-indigo-600 hover:text-indigo-800 flex items-center">
+                    <i data-feather="arrow-left" class="w-4 h-4 mr-1"></i> 수정하기
+                </button>
+            </div>
+            
+            <div id="preview-content" class="border border-gray-200 p-6 rounded-lg">
+                <!-- Preview content will be generated here -->
+            </div>
+            
+            <div class="mt-6 flex justify-end">
+                <button id="download-hwpx" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 flex items-center">
+                    <i data-feather="download" class="w-4 h-4 mr-2"></i> HWPX 다운로드
+                </button>
+                <form id="hwpx-download-form" method="POST" action="/api/generate_hwpx">
+                    <input type="hidden" name="payload" id="hwpx-payload">
+                </form>
+            </div>
+        </div>
+
+        <!-- 🔄 로딩 오버레이 -->
+        <div id="loading-overlay"
+            class="fixed inset-0 bg-white bg-opacity-80 flex flex-col items-center justify-center z-50 hidden">
+            
+            <!-- ✅ 문구 변경 대상 -->
+            <div id="loading-text"
+                class="text-2xl font-semibold text-gray-800 mb-4">
+                회의록을 작성중입니다.
+            </div>
+
+            <div class="text-gray-500">
+                잠시만 기다려 주세요
+            </div>
+        </div>
+
+
+    </main>
+    
+    <custom-footer></custom-footer>
+    
+    <!-- 정적 파일 절대 경로 (Frontend/Meeting/Frontend 하위) -->
+    <script src="/Meeting/Frontend/components/navbar.js"></script>
+    <script src="/Meeting/Frontend/components/footer.js"></script>
+    <script src="/Meeting/Frontend/script.js"></script>
+    <script>feather.replace();</script>
+<script src="https://huggingface.co/deepsite/deepsite-badge.js"></script>
+</body>
+</html>

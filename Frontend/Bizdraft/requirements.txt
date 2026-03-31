@@ -1,0 +1,7 @@
+flask==3.0.2
+python-pptx==0.6.21
+openai==1.35.3
+python-dotenv==1.0.1
+requests==2.32.3
+
+## python==3.12

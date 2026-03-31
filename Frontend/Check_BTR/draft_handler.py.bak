@@ -1,0 +1,483 @@
+import time
+import re
+from datetime import datetime, timedelta
+
+# 국내출장보고서 양식 ID
+REPORT_FORM_ID = "1045"
+
+
+# -----------------------------
+# Debug helpers
+# -----------------------------
+def _debug_dump(page, tag: str):
+    """
+    Save a screenshot to help debug UI state (popup opened? field visible?).
+    Files are saved in the current working directory.
+    """
+    try:
+        page.screenshot(path=f"debug_{tag}.png", full_page=True)
+        print(f"[DEBUG] Screenshot saved: debug_{tag}.png")
+    except Exception as e:
+        print(f"[DEBUG] screenshot failed ({tag}): {e}")
+
+
+def _wait_any_popup(page, keywords=None, timeout_ms=9000):
+    """
+    Wait for any modal-like container (dialog/aria-modal/text match).
+    Returns a Locator scoped to the popup container, or None.
+
+    keywords: list[str] - if provided, prefer a container that includes one of these keywords.
+    """
+    keywords = keywords or []
+    start = time.time()
+
+    while (time.time() - start) * 1000 < timeout_ms:
+        # Pattern 1: role/aria modal
+        dlg = page.locator("[role='dialog'], div[role='dialog'], [aria-modal='true']")
+        if dlg.count() > 0:
+            last = dlg.last
+            try:
+                if last.is_visible():
+                    if keywords:
+                        try:
+                            txt = last.inner_text() or ""
+                        except:
+                            txt = ""
+                        if any(k in txt for k in keywords):
+                            return last
+                    # even if keyword mismatch, visible dialog is still useful
+                    return last
+            except:
+                pass
+
+        # Pattern 2: text appears somewhere (fallback; less strict)
+        for k in keywords:
+            try:
+                if page.locator(f"text={k}").count() > 0:
+                    # Grab a reasonable ancestor container
+                    # (Not perfect, but helps when role attributes are missing.)
+                    return page.locator(
+                        f"xpath=//*[contains(., '{k}')][ancestor-or-self::*[self::div or self::section]][1]"
+                    ).first
+            except:
+                continue
+
+        time.sleep(0.2)
+
+    return None
+
+
+# -----------------------------
+# Utility helpers
+# -----------------------------
+def _safe_text(s: str) -> str:
+    return (s or "").strip()
+
+
+def _click_center(locator) -> bool:
+    """
+    Some tree/grid UIs require clicking the row center rather than child span text.
+    """
+    try:
+        box = locator.bounding_box()
+        if box:
+            locator.page.mouse.click(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
+            return True
+    except:
+        pass
+    try:
+        locator.click(force=True)
+        return True
+    except:
+        return False
+
+
+def _fill_date_input(inp, value: str):
+    """
+    Robust replace for date inputs.
+    """
+    inp.click(force=True)
+    try:
+        inp.press("Control+A")
+    except:
+        pass
+    inp.press("Backspace")
+    inp.type(value, delay=30)
+    inp.press("Enter")
+
+
+def _extract_app_title(page) -> str:
+    """
+    Extract original (application) title from read page.
+    """
+    old_title = ""
+
+    # 1) common input
+    try:
+        doc_input = page.locator("input[name='doc_name']").first
+        if doc_input.count() > 0 and doc_input.is_visible():
+            old_title = _safe_text(doc_input.input_value())
+    except:
+        pass
+
+    # 2) element with name='doc_name'
+    if not old_title:
+        try:
+            node = page.locator("[name='doc_name']").first
+            if node.count() > 0:
+                old_title = _safe_text(node.text_content())
+        except:
+            pass
+
+    # 3) table row "제목"
+    if not old_title:
+        try:
+            old_title = _safe_text(
+                page.locator("xpath=//tr[.//th[contains(text(),'제목')]]//td").first.text_content()
+            )
+        except:
+            pass
+
+    return _safe_text(old_title)
+
+
+def _build_new_title(old_title: str) -> str:
+    new_title = old_title
+    new_title = new_title.replace("신청서", "결과보고서").replace("계획서", "결과보고서").replace("품의서", "결과보고서")
+    if "보고서" not in new_title:
+        new_title = new_title.strip() + " 결과보고서"
+    return new_title.strip()
+
+
+def _title_keyword_fallback(old_title: str) -> str:
+    """
+    Fallback keyword if exact title search fails.
+    - remove leading [ ... ]
+    - compress whitespace
+    - truncate length
+    """
+    t = old_title
+    t = re.sub(r"^\s*\[[^\]]+\]\s*", "", t)  # remove leading [프로젝트]
+    t = re.sub(r"\s+", " ", t).strip()
+    if len(t) > 40:
+        t = t[:40]
+    return t
+
+
+def _find_title_input_anywhere(page):
+    """
+    Find title input across page and all iframes.
+    """
+    selectors = [
+        "input[name='doc_name']",
+        "#doc_name",
+        "input[title='제목']",
+        "xpath=//tr[.//th[contains(normalize-space(.),'제목')]]//input",
+        "xpath=//label[contains(.,'제목')]/following::input[1]",
+    ]
+
+    # main page
+    for sel in selectors:
+        loc = page.locator(sel).first
+        if loc.count() > 0:
+            try:
+                if loc.is_visible():
+                    return loc
+            except:
+                pass
+
+    # all frames
+    for fr in page.frames:
+        for sel in selectors:
+            try:
+                loc = fr.locator(sel).first
+                if loc.count() > 0 and loc.is_visible():
+                    return loc
+            except:
+                continue
+
+    return None
+
+
+# -----------------------------
+# Main entry
+# -----------------------------
+def execute_drafting(page, app_id):
+    """
+    Playwright Page 객체를 받아 보고서 작성을 수행하는 함수
+
+    목표:
+      1) 신청서 제목 추출
+      2) 결과보고서 작성 화면으로 이동 후 제목 입력 (iframe 포함)
+      3) 기록물철 선택 '출장' -> '반영' (팝업 DOM 패턴 다양성 대응)
+      4) 참조문서 추가
+         - 기간: 오늘-1년 ~ 오늘
+         - 제목: 출장신청서 제목(원제)
+    """
+    print(f"[Draft Handler] Start processing App ID: {app_id}")
+
+    try:
+        # ============================================================
+        # 1. 신청서 읽기
+        # ============================================================
+        read_url = f"https://gw.kothea.or.kr/#/popup?MicroModuleCode=ea&diKeyCode={app_id}&callComp=UCAP001"
+        page.goto(read_url)
+        page.wait_for_load_state("domcontentloaded")
+        try:
+            page.wait_for_selector("[name='doc_name'], input[name='doc_name']", timeout=8000)
+        except:
+            time.sleep(2)
+
+        old_title = _extract_app_title(page)
+        if not old_title:
+            _debug_dump(page, "fail_extract_old_title")
+            return False, "Could not extract original title."
+
+        new_title = _build_new_title(old_title)
+        print(f"[Draft Handler] Old title: {old_title}")
+        print(f"[Draft Handler] New title: {new_title}")
+
+        # ============================================================
+        # 2. 작성 페이지 이동 & 제목 입력 (프레임 포함)
+        # ============================================================
+        write_url = f"https://gw.kothea.or.kr/#/popup?MicroModuleCode=ea&callComp=UCAP001&tiKeyCode={REPORT_FORM_ID}"
+        page.goto(write_url)
+        page.wait_for_load_state("domcontentloaded")
+        time.sleep(1.5)
+
+        _debug_dump(page, "before_title_fill")
+
+        title_filled = False
+        target_input = _find_title_input_anywhere(page)
+        print(f"[DEBUG] title_input found? {bool(target_input)}")
+
+        if target_input:
+            try:
+                target_input.click(force=True)
+                target_input.fill(new_title)
+                # blur to trigger UI update
+                target_input.press("Tab")
+                title_filled = True
+                print("[DEBUG] title filled (input).")
+            except Exception as e:
+                print(f"[DEBUG] title fill failed (input): {e}")
+
+        # contenteditable fallback
+        if not title_filled:
+            try:
+                ce = page.locator("[contenteditable='true']").first
+                if ce.count() > 0 and ce.is_visible():
+                    ce.click(force=True)
+                    page.keyboard.press("Control+A")
+                    page.keyboard.type(new_title, delay=20)
+                    page.keyboard.press("Tab")
+                    title_filled = True
+                    print("[DEBUG] title filled (contenteditable).")
+            except Exception as e:
+                print(f"[DEBUG] title fill failed (contenteditable): {e}")
+
+        _debug_dump(page, "after_title_fill")
+
+        # ============================================================
+        # 3. 기록물철 선택 (팝업 DOM 다양성 대응)
+        # ============================================================
+        print("[Draft Handler] Selecting Record Folder...")
+
+        try:
+            folder_btn = page.locator(
+                "xpath=//tr[.//th[contains(text(),'기록물철')]]//button | "
+                "//tr[.//th[contains(text(),'기록물철')]]//a | "
+                "//th[contains(.,'기록물철')]/following-sibling::td//button | "
+                "//th[contains(.,'기록물철')]/following-sibling::td//a"
+            ).first
+
+            print(f"[DEBUG] folder_btn count={folder_btn.count()}")
+            folder_btn.wait_for(state="visible", timeout=8000)
+
+            _debug_dump(page, "before_folder_click")
+            folder_btn.click(force=True)
+            time.sleep(0.6)
+            _debug_dump(page, "after_folder_click")
+
+            folder_popup = _wait_any_popup(page, ["기록물철", "기록물철선택", "기록물철 선택"], timeout_ms=10000)
+            if not folder_popup:
+                raise Exception("Record folder popup not detected (click failed or DOM mismatch).")
+
+            print("[Draft Handler] Record Folder Popup Found.")
+
+            # 검색어 입력(있으면)
+            search_input = folder_popup.locator("input[placeholder*='검색'], input[placeholder*='입력']").first
+            if search_input.count() > 0 and search_input.is_visible():
+                search_input.click(force=True)
+                search_input.fill("출장")
+                search_input.press("Enter")
+                time.sleep(0.8)
+
+                search_btn = folder_popup.locator(
+                    "button:has(img[src*='search']), button:has-text('검색'), button.OBTConditionPanel_searchButton__2cpwg"
+                ).first
+                if search_btn.count() > 0 and search_btn.is_visible():
+                    search_btn.click(force=True)
+                    time.sleep(1.0)
+
+            # 트리에서 '출장' 선택
+            # 1) role 기반 시도
+            trip_item = folder_popup.get_by_role("treeitem", name="출장")
+            if trip_item.count() == 0:
+                # 2) exact text
+                trip_item = folder_popup.locator("xpath=.//*[self::span or self::a][normalize-space()='출장']")
+            if trip_item.count() == 0:
+                # 3) partial text
+                trip_item = folder_popup.locator("xpath=.//*[self::span or self::a][contains(normalize-space(.),'출장')]")
+
+            trip_item.first.wait_for(state="visible", timeout=6000)
+
+            if not _click_center(trip_item.first):
+                raise Exception("Failed to click '출장' node")
+
+            time.sleep(0.4)
+
+            apply_btn = folder_popup.locator("button:has-text('반영'), a:has-text('반영')").last
+            apply_btn.wait_for(state="visible", timeout=6000)
+            apply_btn.click(force=True)
+
+            time.sleep(0.8)
+            _debug_dump(page, "after_folder_apply")
+
+            print("[Draft Handler] Applied Record Folder.")
+
+        except Exception as e:
+            print(f"[Draft Handler] Folder error: {e}")
+            # 팝업/버튼 탐지 실패는 흔하므로, 다음 단계로 진행하되 디버깅 자료는 남김
+            _debug_dump(page, "folder_error_state")
+
+        # ============================================================
+        # 4. 참조문서 추가
+        #    기간: 오늘-1년 ~ 오늘
+        #    제목: 신청서 제목
+        # ============================================================
+        print("[Draft Handler] Adding Reference Document...")
+
+        try:
+            ref_select_btn = page.locator(
+                "xpath=//tr[.//th[contains(text(),'참조문서')]]//button[contains(.,'선택')] | "
+                "//th[contains(.,'참조문서')]/following-sibling::td//button[contains(.,'선택')] | "
+                "//button:has-text('선택')"
+            ).last
+
+            print(f"[DEBUG] ref_select_btn count={ref_select_btn.count()}")
+            ref_select_btn.wait_for(state="visible", timeout=8000)
+
+            _debug_dump(page, "before_ref_click")
+            ref_select_btn.click(force=True)
+            time.sleep(0.6)
+            _debug_dump(page, "after_ref_click")
+
+            popup = _wait_any_popup(page, ["참조문서"], timeout_ms=10000)
+            if not popup:
+                raise Exception("Reference popup not detected (click failed or DOM mismatch).")
+
+            print("[Draft Handler] Reference Popup Identified.")
+
+            # [A] 기간 설정: 오늘-1년 ~ 오늘
+            today = datetime.now().date()
+            start = today - timedelta(days=365)
+            start_date = start.strftime("%Y-%m-%d")
+            end_date = today.strftime("%Y-%m-%d")
+
+            date_inputs = popup.locator(".OBTDatePickerRebuild_inputYMD__PtxMy, input[class*='DatePicker'][type='text']")
+            if date_inputs.count() >= 2:
+                inp_start = date_inputs.nth(0)
+                inp_end = date_inputs.nth(1)
+
+                if inp_start.is_visible():
+                    _fill_date_input(inp_start, start_date)
+                    time.sleep(0.2)
+
+                if inp_end.is_visible():
+                    _fill_date_input(inp_end, end_date)
+                    time.sleep(0.3)
+            else:
+                print("[Draft Handler] Date inputs not found (count < 2).")
+
+            # [B] 제목 검색
+            title_input = popup.locator("#diTitle input").first
+            if title_input.count() == 0:
+                title_input = popup.locator("xpath=.//th[contains(text(),'제목')]/following-sibling::td//input").first
+            if title_input.count() == 0:
+                # 마지막 fallback: 텍스트 input (date 제외)
+                title_input = popup.locator(
+                    "xpath=.//input[@type='text' and not(contains(@class,'OBTDatePickerRebuild_inputYMD'))]"
+                ).first
+
+            search_btn = popup.locator(
+                "button.OBTConditionPanel_searchButton__2cpwg, button:has(img[src*='search']), button:has-text('검색')"
+            ).first
+
+            def _has_results():
+                return popup.locator(".grid_body input[type='checkbox'], .grid_body .row input[type='checkbox']").count() > 0
+
+            # 1차: old_title 전체
+            if title_input.count() > 0 and title_input.is_visible():
+                title_input.click(force=True)
+                title_input.fill(old_title)
+                title_input.press("Enter")
+                time.sleep(0.8)
+                if search_btn.count() > 0 and search_btn.is_visible():
+                    search_btn.click(force=True)
+                    time.sleep(1.2)
+
+            # 결과 없으면 fallback 키워드로 재검색
+            if not _has_results():
+                kw = _title_keyword_fallback(old_title)
+                if kw and title_input.count() > 0 and title_input.is_visible():
+                    title_input.click(force=True)
+                    title_input.fill(kw)
+                    title_input.press("Enter")
+                    time.sleep(0.8)
+                    if search_btn.count() > 0 and search_btn.is_visible():
+                        search_btn.click(force=True)
+                        time.sleep(1.2)
+
+            # [C] 첫 결과 체크
+            first_chk = popup.locator(".grid_body input[type='checkbox']").first
+            if first_chk.count() > 0 and first_chk.is_visible():
+                first_chk.check(force=True)
+                time.sleep(0.4)
+
+                # [D] 추가(아래로) 버튼
+                add_btn = popup.locator("button.arrBtnDown").first
+                if add_btn.count() > 0 and add_btn.is_visible():
+                    add_btn.click(force=True)
+                    time.sleep(0.4)
+
+                    # [E] 확인
+                    confirm_btn = popup.locator("button:has-text('확인')").last
+                    if confirm_btn.count() > 0 and confirm_btn.is_visible():
+                        confirm_btn.click(force=True)
+                        print("[Draft Handler] Confirmed reference doc selection.")
+                    else:
+                        print("[Draft Handler] Confirm button missing.")
+                else:
+                    print("[Draft Handler] Add button missing.")
+            else:
+                print("[Draft Handler] No results found (checkbox missing).")
+
+            _debug_dump(page, "after_ref_confirm")
+
+        except Exception as e:
+            print(f"[Draft Handler] Ref Error: {e}")
+            _debug_dump(page, "ref_error_state")
+
+        # ============================================================
+        # Done
+        # ============================================================
+        msg = f"Draft Created!\nTitle: {new_title}"
+        if not title_filled:
+            msg += "\n(Title input not filled - check debug_before_title_fill.png)"
+        return True, msg
+
+    except Exception as e:
+        print(f"[Draft Handler] Error: {e}")
+        _debug_dump(page, "fatal_error_state")
+        return False, f"Error: {str(e)}"

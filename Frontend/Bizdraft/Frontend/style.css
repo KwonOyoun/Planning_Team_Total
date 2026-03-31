@@ -1,0 +1,175 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ===============================
+   Global
+=============================== */
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* ===============================
+   Proposal (본문 영역)
+=============================== */
+
+.prose {
+    line-height: 1.6;
+}
+
+.prose h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-top: 1.75rem;
+    margin-bottom: 1rem;
+    color: #0A2981;
+}
+
+.prose h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #0A2981;
+}
+
+.prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    color: #1e40af;
+}
+
+.prose p {
+    margin-bottom: 1rem;
+}
+
+.prose ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+/* ===============================
+   Loading Animation
+=============================== */
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ===============================
+   Prompt Sidebar Animation
+   (Slide Down Effect)
+=============================== */
+
+/*
+  ❗ 중요
+  - display: none 사용 ❌
+  - active class로만 열고 닫기
+*/
+
+.prompt-editor {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    transform: translateY(-6px);
+    transition:
+        max-height 0.35s ease,
+        opacity 0.25s ease,
+        transform 0.25s ease;
+}
+
+.prompt-category.active .prompt-editor {
+    max-height: 1000px;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===============================
+   Prompt Category UI Feedback
+=============================== */
+
+.prompt-category {
+    transition: background-color 0.2s ease;
+}
+
+.prompt-category:hover {
+    background-color: #f8fafc;
+}
+
+.prompt-category.active {
+    background-color: #f0f9ff;
+}
+
+/* ===============================
+   Textarea (Prompt Editor)
+=============================== */
+
+.prompt-editor textarea {
+    width: 100%;
+    min-height: 300px;
+    padding: 0.75rem;
+
+    border: 1px solid #c7d2fe;
+    border-radius: 0.375rem;
+
+    font-family: monospace;
+    font-size: 0.85rem;
+    line-height: 1.4;
+
+    resize: vertical;
+    background-color: #ffffff;
+}
+
+.prompt-editor textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3);
+}
+
+/* ===============================
+   Buttons (Sidebar)
+=============================== */
+
+.editor-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.editor-actions button {
+    padding: 0.35rem 0.6rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border: none;
+}
+
+.editor-actions .save-btn {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+
+.editor-actions .save-btn:hover {
+    background-color: #1e40af;
+}
+
+.editor-actions .reset-btn {
+    background-color: #e5e7eb;
+    color: #111827;
+}
+
+.editor-actions .reset-btn:hover {
+    background-color: #d1d5db;
+}

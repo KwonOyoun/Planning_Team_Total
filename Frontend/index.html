@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlanCraft - 기획1팀 플랫폼</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="components/navbar.js"></script>
+    <script src="components/tool-card.js"></script>
+</head>
+
+<body class="bg-gray-50">
+    <!-- 🎬 인트로 영상 -->
+    <div id="intro-video">
+        <video id="introPlayer" autoplay muted playsinline>
+            <source src="video/intro.mp4" type="video/mp4">
+        </video>
+
+        <div class="skip-hint">클릭하여 건너뛰기</div>
+    </div>
+
+    <custom-navbar></custom-navbar>
+
+    <main>
+        <section class="report-section">
+            <div class="report-cover-inner">
+
+                <div class="report-line"></div>
+
+                <p class="report-subtitle">
+                    『간단한 사무 업무를 AI 기반으로 자동화하기 위해 한 곳에 모였습니다.』
+                </p>
+
+                <h1 class="report-title">
+                    기획1팀을 위한 AI 기반 자동화 플랫폼
+                </h1>
+
+                <div class="report-project">
+                    PlanningTeam.No1
+                </div>
+
+                <div class="report-line"></div>
+
+            </div>
+
+
+            <div class="report-cover-inner">
+                <div class="report-section-title">
+                    <span class="section-index">I</span>
+                    <span class="section-text">사업개요</span>
+                </div>
+
+                <div class="mt-8 max-w-5xl mx-auto text-left">
+                    <!-- 소제목 -->
+                    <h3 class="text-2xl font-semibold mb-6 mt-0">
+                        가. 사업 추진 배경
+                    </h3>
+
+                    <!-- 본문 -->
+                    <ul class="space-y-3 text-lg leading-relaxed text-gray-800 mb-12">
+                        <li class="flex gap-2">
+                            <span>□</span>
+                            <p>
+                                본 웹 플랫폼은 멀티모달 인공지능 기반 헬스케어 사업을 기획·추진하는 과정에서
+                                발생하는 다양한 업무를 효율적으로 지원하기 위해 구축된 내부 업무 지원 플랫폼으로,
+                                사업 기획, 회의 관리, 프로젝트 운영, 데이터 분석 등 기획 전반의 업무를 체계적으로
+                                관리할 수 있도록 설계됨.
+                            </p>
+                        </li>
+
+                        <li class="flex gap-8">
+                            <span></span>
+                            <p>
+                                - 특히 사업기획서 작성, 회의록 자동 생성, 프로젝트 일정 관리 등 반복적이고 소요 시간이
+                                큰 업무를 디지털화·자동화함으로써, 실무자의 업무 부담을 경감하고 기획의 일관성과 품질을
+                                제고하는 것을 목표로 함.
+                            </p>
+                        </li>
+                        <li class="flex gap-8 text-midle">
+                            <p>
+                                ...
+                            </p>
+                        </li>
+                    </ul>
+
+                </div>
+
+
+
+                <div class="report-section-title">
+                    <span class="section-index">II</span>
+                    <span class="section-text">사업내용</span>
+                </div>
+
+                <section class="doc-section">
+                    <div class="doc-row">
+                        <div class="doc-item">
+                            <div class="doc-image-wrap">
+                                <img src="image/home1.png" alt="Logo1">
+                            </div>
+                            <h3 class="doc-title">AI 기반 사업기획서 작성</h3>
+                            <p class="doc-desc">AI가 도와주는 기획서 작성 도구</p>
+                            <a href="/Bizdraft" class="doc-primary-btn">시작하기</a>
+                        </div>
+
+                        <div class="doc-item">
+                            <div class="doc-image-wrap">
+                                <img src="image/home2.png" alt="Logo2">
+                            </div>
+                            <h3 class="doc-title">AI 기반 회의록 자동 생성</h3>
+                            <p class="doc-desc">회의 품의를 기반으로 정리해주는 도구</p>
+                            <a href="/Meeting" class="doc-primary-btn">시작하기</a>
+                        </div>
+
+                        <div class="doc-item">
+                            <div class="doc-image-wrap">
+                                <img src="image/home3.png" alt="Logo3">
+                            </div>
+                            <h3 class="doc-title">출장 보고서 점검 (Check_BTR)</h3>
+                            <p class="doc-desc">출장 신청서와 보고서를 대조하고 점검하는 도구</p>
+                            <a href="/Check_BTR" class="doc-primary-btn">시작하기</a>
+                        </div>
+                    </div>
+
+                    <div class="doc-row">
+                        <div class="doc-item">
+                            <div class="doc-image-wrap">
+                                <img src="image/dev.png" alt="">
+                            </div>
+                            <h3 class="doc-title">개발중</h3>
+                            <p class="doc-desc">-</p>
+                            <a href="/dev" class="doc-primary-btn dev-disabled">시작하기</a>
+                        </div>
+
+                        <div class="doc-item">
+                            <div class="doc-image-wrap">
+                                <img src="image/dev.png" alt="">
+                            </div>
+                            <h3 class="doc-title">개발중</h3>
+                            <p class="doc-desc">-</p>
+                            <a href="/dev" class="doc-primary-btn dev-disabled">시작하기</a>
+                        </div>
+
+                        <div class="doc-item">
+                            <div class="doc-image-wrap">
+                                <img src="image/dev.png" alt="">
+                            </div>
+                            <h3 class="doc-title">개발중</h3>
+                            <p class="doc-desc">-</p>
+                            <a href="/dev" class="doc-primary-btn dev-disabled">시작하기</a>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+
+
+            <div class="report-cover-inner">
+                <div class="report-section-title">
+                    <span class="section-index">III</span>
+                    <span class="section-text">기획1팀 소개</span>
+                </div>
+                <!-- Team Section-->
+                <section class="mt-24">
+                    <div class="grid md:grid-cols-4 gap-8">
+                        <div class="bg-white p-8 rounded-xl shadow-md flex flex-col">
+                            <img src="image/profile1.png"
+                                class="w-28 h-28 rounded-full mx-auto mb-4 object-cover transition-transform duration-200 hover:scale-105"
+                                alt="팀원 프로필">
+                            <h3 class="text-xl font-semibold mb-2 text-center">임성준</h3>
+                            <p class="text-gray-600 text-center mb-4">팀장</p>
+                            <div class="flex flex-col gap-2 mt-auto">
+                                <a href="tel:010-9955-5522" class="btn btn-secondary">
+                                    <i data-feather="phone"></i>010-9955-5522
+                                </a>
+                                <a href="mailto:lsj@kothea.or.kr" class="btn btn-primary">
+                                    <i data-feather="mail"></i>이메일 보내기
+                                </a>
+                            </div>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-md flex flex-col">
+                            <img src="image/profile2.jpg"
+                                class="w-28 h-28 rounded-full mx-auto mb-4 object-cover transition-transform duration-200 hover:scale-105"
+                                alt="팀원 프로필">
+                            <h3 class="text-xl font-semibold mb-2 text-center">권오윤</h3>
+                            <p class="text-gray-600 text-center mb-4">주임연구원</p>
+                            <div class="flex flex-col gap-2 mt-auto">
+                                <a href="tel:010-4296-6400" class="btn btn-secondary">
+                                    <i data-feather="phone"></i>010-4296-6400
+                                </a>
+                                <a href="mailto:koy@kothea.or.kr" class="btn btn-primary">
+                                    <i data-feather="mail"></i>이메일 보내기
+                                </a>
+                            </div>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-md flex flex-col">
+                            <img src="image/profile3.jpg"
+                                class="w-28 h-28 rounded-full mx-auto mb-4 object-cover transition-transform duration-200 hover:scale-105"
+                                alt="팀원 프로필">
+                            <h3 class="text-xl font-semibold mb-2 text-center">김재석</h3>
+                            <p class="text-gray-600 text-center mb-4">연구원</p>
+                            <div class="flex flex-col gap-2 mt-auto">
+                                <a href="tel:010-2335-1589" class="btn btn-secondary">
+                                    <i data-feather="phone"></i>010-2335-1589
+                                </a>
+                                <a href="mailto:kjs@kothea.or.kr" class="btn btn-primary">
+                                    <i data-feather="mail"></i>이메일 보내기
+                                </a>
+                            </div>
+                        </div>
+                        <div class="bg-white p-8 rounded-xl shadow-md flex flex-col">
+                            <img src="image/profile4.jpg"
+                                class="w-28 h-28 rounded-full mx-auto mb-4 object-cover transition-transform duration-200 hover:scale-105"
+                                alt="팀원 프로필">
+                            <h3 class="text-xl font-semibold mb-2 text-center">황인영</h3>
+                            <p class="text-gray-600 text-center mb-4">연구원</p>
+                            <div class="flex flex-col gap-2 mt-auto">
+                                <a href="tel:010-3680-9529" class="btn btn-secondary">
+                                    <i data-feather="phone"></i>010-3680-9529
+                                </a>
+                                <a href="mailto:hiy9529@kothea.or.kr" class="btn btn-primary">
+                                    <i data-feather="mail"></i>이메일 보내기
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+    <script>feather.replace();</script>
+    <script src="script.js"></script>
+</body>
+
+</html>
