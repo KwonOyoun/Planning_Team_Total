@@ -1,0 +1,84 @@
+# Global Configuration for Gov Event Monitor v2.0
+
+crawlers:
+  defaults:
+    max_pages: 3
+    verify_ssl: false # SSL 인증서 검증 오류 시 False로 설정
+    days: 5
+  g2b:
+    api_key_env: "G2B_API_KEY"
+    keywords: ["의료기기", "헬스케어"]
+  iris:
+    url: "https://www.iris.go.kr"
+
+filters:
+  healthcare:
+    storage_threshold: 0 # DB에 저장할 최소 점수
+    notify_threshold: 5  # 알림을 보낼 최소 점수
+    threshold: 5 # Legacy support
+    primary_agencies:
+      - "보건복지부"
+      - "질병관리청"
+      - "식품의약품안전처"
+      - "한국보건산업진흥원"
+      - "건강보험심사평가원"
+      - "국립중앙의료원"
+      - "한국보건의료연구원"
+    secondary_agencies:
+      - "과학기술정보통신부"
+      - "산업통상자원부"
+      - "정보통신산업진흥원"
+      - "정보통신기획평가원"
+      - "한국지능정보사회진흥원"
+      - "한국연구재단"
+      - "한국산업기술진흥원"
+      - "한국산업기술기획평가원"
+      - "한국에너지기술평가원"
+    include_patterns:
+      - "의료기기"
+      - "디지털\\s*헬스"
+      - "스마트\\s*헬스"
+      - "모바일\\s*헬스"
+      - "원격(?:의료|진료|모니터링)"
+      - "웨어러블"
+      - "(?:EMR|EHR)"
+      - "의료\\s*정보"
+      - "임상(?:시험|연구)"
+      - "(?:RWD|RWE)"
+      - "(?:의료\\s*AI|AI\\s*의료|의료\\s*인공지능)"
+      - "(?:보건의료\\s*데이터|의료\\s*데이터)"
+      - "(?:바이오\\s*헬스|바이오헬스)"
+      - "재활"
+      - "(?:고령자|노인)\\s*(?:돌봄|케어)"
+      - "건강\\s*관리"
+      - "감염병\\s*(?:대응|예방|감시)"
+      - "환자|진단|치료|병원|의약품|제약|신약"
+      - "(?:보건의료기술|의료기술(?:개발)?)"
+      - "(?:바이오[\\s·∙ㆍ-]*의료)"
+    exclude_patterns:
+      - "토목|건설|도로|철도|항만|선박|조선"
+      - "항공|우주|위성"
+      - "국방|군수"
+      - "원자력|원전"
+      - "광산|채굴"
+      - "자동차\\s*(?:부품|경량화)"
+      - "반도체(?!\\s*바이오)|디스플레이(?!\\s*헬스)|배터리(?!\\s*헬스)"
+      - "에너지|전력|발전|태양광|풍력|수소"
+      - "농업|농업기계"
+      - "소재부품|산업혁신기반|산단|인프라"
+      - "양자(컴퓨팅|센싱|플랫폼)"
+
+database:
+  path: "monitor.db"
+
+notifications:
+  slack:
+    enabled: false
+    webhook_url_env: "SLACK_WEBHOOK_URL"
+  email:
+    enabled: false
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    sender_env: "EMAIL_USER"
+    password_env: "EMAIL_PASSWORD"
+    recipients: []

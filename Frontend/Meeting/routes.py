@@ -67,7 +67,7 @@ def _login_and_prepare(username, password):
 
 @Meeting_bp.route("/")
 def index():
-    return send_from_directory("Frontend/Meeting/Frontend", "index.html")
+    return send_from_directory("Frontend/Meeting/Frontend", "meeting_index.html")
 
 @Meeting_bp.route("/api/login", methods=["POST"])
 def api_login():

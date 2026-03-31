@@ -117,7 +117,7 @@ def start_browser_thread():
 
 @Check_BTR_bp.route('/')
 def index(): 
-    return render_template('index.html')
+    return render_template('check_btr_index.html')
 
 @Check_BTR_bp.route('/api/trips')
 def get_trips():
